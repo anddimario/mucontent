@@ -1,0 +1,16 @@
+{
+  "name": "mucontent",
+  "version": "0.0.1",
+  "description": "MuContent - Multisite, multi content, modular CMS",
+  "main": "app.js",
+  "scripts": {
+    "dev": "DATABASE='mongodb://localhost:27017/mucontent' nodemon app.js"
+  },
+  "dependencies": {
+    "async": "^2.6.0",
+    "ejs": "^2.5.7",
+    "mongodb": "^2.2.33"
+  },
+  "author": "Andrea Di Mario",
+  "license": "MIT"
+}
