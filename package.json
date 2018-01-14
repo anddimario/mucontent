@@ -1,12 +1,13 @@
 {
   "name": "mucontent",
   "version": "0.0.1",
-  "description": "MuContent - Multisite, multi content, modular CMS",
+  "description": "Multi site, multi content, multi language, modular CMS",
   "main": "app.js",
   "scripts": {
-    "dev": "DATABASE='mongodb://localhost:27017/mucontent' nodemon app.js"
+    "dev": "DATABASE='mongodb://127.0.0.1:27017/mucontent' nodemon app.js"
   },
   "dependencies": {
+    "ajv": "^5.1.0",
     "async": "^2.6.0",
     "ejs": "^2.5.7",
     "mongodb": "^2.2.33"

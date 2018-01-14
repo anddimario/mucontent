@@ -1,3 +1,5 @@
+'use strict';
+
 const querystring = require('querystring');
 const http = require('http');
 const url = require('url');
@@ -40,6 +42,40 @@ function response(req, res, data) {
 
 }
 
+function renderResults(req, res, route, renderInfo) {
+  res.statusCode = 200;
+  for (const header in route.headers) {
+    res.setHeader(header, route.headers[header]);
+  }
+  // check if language is setted
+  if (req.session && req.session.language) {
+    // Check if locales exists for the language
+    if (route.locales && route.locales[req.session.language]) {
+      const locale = route.locales[req.session.language];
+      for (let c in locale) {
+        renderInfo[c] = locale[c];
+      }
+    }
+  }
+  // see if render template (html)
+  if (route.headers['Content-Type'] === 'text/html') {
+    const templateHost = req.headers.host.split(':')[0];
+    // create the template
+    let template = '';
+    if (templates[`${templateHost}-header`]) {
+      template += templates[`${templateHost}-header`];
+    }
+    template += route.view;
+    if (templates[`${templateHost}-footer`]) {
+      template += templates[`${templateHost}-footer`];
+    }
+    const html = ejs.render(template, renderInfo);
+    response(req, res, html);
+  } else {
+    res.end(result.body);
+  }
+}
+
 function processRoute(req, res, route, parsedUrl) {
   // Set CORS headers
   if (route.cors) {
@@ -66,36 +102,39 @@ function processRoute(req, res, route, parsedUrl) {
       //stringBody = JSON.stringify(stringBody);
     }
 
-    const event = {
-      host: req.headers.host,
-      httpMethod: req.method,
-      body: stringBody,
-      queryStringParameters: parsedUrl.query
-    };
     if (stringBody) {
       req.body = stringBody;
     }
     if (parsedUrl.query) {
       req.params = parsedUrl.query
     }
+    // add useful route informations to req
+    req.routeInformations = {};
+    if (route.permissions) {
+      req.routeInformations.permissions = route.permissions;
+    }
+    if (route.validators) {
+      req.routeInformations.validators = route.validators;
+    }
     // use middlewares (waterfall)
     const middlewaresTasks = [];
-    for (let i = 0; i < route.middlewares.length; i++) {
-      // First task
-      if (i === 0) {
-        middlewaresTasks.push((callback) => {
-          require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
-            callback(err, results);
-          })
-        });
-      } else {
-
-        middlewaresTasks.push((previous, callback) => {
-          event.previous = previous; // pass previous results to next, with previous
-          require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
-            callback(err, res);
-          })
-        });
+    if (route.middlewares) {
+      for (let i = 0; i < route.middlewares.length; i++) {
+        // First task
+        if (i === 0) {
+          middlewaresTasks.push((callback) => {
+            require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
+              callback(err, results);
+            })
+          });
+        } else {
+          middlewaresTasks.push((previous, callback) => {
+            req.previousMiddleware = previous; // pass previous results to next, with previousMiddleware
+            require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
+              callback(err, results);
+            })
+          });
+        }
       }
     }
     async.waterfall(middlewaresTasks, (err, resMiddlewares) => {
@@ -103,58 +142,49 @@ function processRoute(req, res, route, parsedUrl) {
         res.statusCode = 500;
         res.end(`Error ${err}`);
       } else {
-        const lambda = require(`${__dirname}/services/${route.service}/index`);
-        const lambdaTasks = [(callback) => {
-          lambda.handler(req, res, (err, results) => {
-            callback(err, results)
-          });
-        }];
-        // add widgets
-        for (let i = 0; i < route.widgets.length; i++) {
-
+        const lambdaTasks = [];
+        // add service, if it's defined
+        if (route.service) {
+          const lambda = require(`${__dirname}/services/${route.service}/index`);
           lambdaTasks.push((callback) => {
-            const widget = require(`./widgets/${route.middlewares[i]}`).handler(req, res, (err, results) => {
-              callback(err, results);
+            lambda.handler(req, res, (err, results) => {
+              callback(err, results)
             });
           });
-
         }
-        async.parallel(lambdaTasks, (err, lambdasRes) => {
-          if (err) {
-            res.statusCode = 500;
-            res.end(`Error ${err}`);
-          } else {
-            res.statusCode = 200;
-            for (const header in route.headers) {
-              res.setHeader(header, route.headers[header]);
-            }
-            // create render informations object
-            const renderInfo = {};
-            for (let i = 0; i < lambdasRes.length; i++) {
-              const info = lambdasRes[i];
-              for (let c in info) {
-                renderInfo[c] = info[c];
-              }
-            }
-            // see if render template (html)
-            if (route.headers['Content-Type'] === 'text/html') {
-              const templateHost = req.headers.host.split(':')[0];
-              // create the template
-              let template = '';
-              if (templates[`${templateHost}-header`]) {
-                template += templates[`${templateHost}-header`];
-              }
-              template += route.view;
-              if (templates[`${templateHost}-footer`]) {
-                template += templates[`${templateHost}-footer`];
-              }
-              const html = ejs.render(template, renderInfo);
-              response(req, res, html);
-            } else {
-              res.end(result.body);
-            }
+        // add widgets, if they exists
+        if (route.widgets) {
+          for (let i = 0; i < route.widgets.length; i++) {
+
+            lambdaTasks.push((callback) => {
+              const widget = require(`./widgets/${route.middlewares[i]}`).handler(req, res, (err, results) => {
+                callback(err, results);
+              });
+            });
+
           }
-        });
+        }
+        if (lambdaTasks.length > 0) {
+          async.parallel(lambdaTasks, (err, lambdasRes) => {
+            if (err) {
+              res.statusCode = 500;
+              res.end(`Error ${err}`);
+            } else {
+              // create render informations object
+              const renderInfo = {};
+              for (let i = 0; i < lambdasRes.length; i++) {
+                const info = lambdasRes[i];
+                for (let c in info) {
+                  renderInfo[c] = info[c];
+                }
+              }
+              renderResults(req, res, route, renderInfo);
+            }
+          });
+        } else {
+          const renderInfo = {};
+          renderResults(req, res, route, renderInfo);
+        }
       }
     });
   });
@@ -187,7 +217,7 @@ db.connect(process.env.DATABASE, function (err) {
     process.exit(1);
   } else {
     const collection = db.get().collection('routes');
-    collection.find({cached: true}).toArray((err, routes) => {
+    collection.find({ cached: true }).toArray((err, routes) => {
 
       if (routes) {
         routes.forEach((route) => {
