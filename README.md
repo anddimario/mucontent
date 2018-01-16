@@ -30,11 +30,17 @@ Nodejs (tested with v8.9.4) and mongodb (tested with v3.2)
 - Run dev mode (require nodemon): `npm run dev`     
 or: `DATABASE='mongodb://127.0.0.1:27017/mucontent' node app.js`
 
+### Init scripts
+Run with: `DATABASE='<URL>' node scripts/<SCRIPT_NAME> <HOST>`   
+Available scripts:
+- initAuth: create the auth service required routes (login, logout, registration)
+
 ### Route example payload
 ```
 { 
   path: '/example',
   host: 'www.example.com',
+  method: '<HTTP_METHOD>',
   permissions: ['roleA'], // optional, roles' allowed list
   service: 'example', // optional, directory in services/ used to execute response
   widgets: ['my-widget'], // optional, widgets list
@@ -52,6 +58,7 @@ Run app in your localhost, add this payload for routes in routes' mongodb collec
 db.routes.insert({ 
   path: '/hello-world',
   host: 'localhost:3000',
+  method: 'get',
   service: 'hello-world',
   widgets: ['hello-world'],
   middlewares: ['hello-world'],
@@ -91,6 +98,7 @@ Use hello-world example, with this route:
 db.routes.insert({ 
   path: '/hello-world',
   host: 'localhost:3000',
+  method: 'get',
   permissions: ['user'],
   service: 'hello-world',
   widgets: ['hello-world'],
@@ -110,6 +118,7 @@ An example route for multilanguage:
 db.routes.insert({ 
   path: '/lang-example',
   host: 'localhost:3000',
+  method: 'get',
   middlewares: ['cookie'],
   view: '<%= myText %>',
   headers: {
@@ -124,7 +133,7 @@ db.routes.insert({
   }
 })
 ```
-**IMP** `cookie` middleware must be used to read the language selected that must be stored in session as `language`.
+**IMP** `cookie` middleware must be used to read the language selected that must be stored in session as `language`.    
 **NOTE IMP** As you can see, in this route, widgets and services are not defined, you can in this way simply render a page. Middlewares are optional too.
 
 ### Validation
@@ -133,6 +142,7 @@ To use validation, you must define a route with:
 db.routes.insert({ 
   path: '/hello-world',
   host: 'localhost:3000',
+  method: 'get',
   service: 'hello-world',
   widgets: ['hello-world'],
   middlewares: ['hello-world', 'validation'],
@@ -147,7 +157,12 @@ db.routes.insert({
   }
 })
 ```
-**NOTE** It's used validation middleware and a `validators` value is defined in the route with schema (supported by [ajv](https://github.com/epoberezkin/ajv/))
+**NOTE** If method is `GET`, validators works for querystring params.    
+**NOTE** It's used validation middleware and a `validators` value is defined in the route with schema (supported by [ajv](https://github.com/epoberezkin/ajv/))    
 **IMP** Validation middleware doesn't response with an error, but add a variable in `req` useful to use on your service. So the variable `req.validationErrors` contains the error array in ajv format.
+
+### Redirection
+If you need a redirection, set the header in `headers` values as:    
+`'Location': <YOUR_ADDRESS>`
 
 License: **MIT**

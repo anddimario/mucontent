@@ -9,6 +9,7 @@
   "dependencies": {
     "ajv": "^5.1.0",
     "async": "^2.6.0",
+    "bcrypt": "^1.0.3",
     "ejs": "^2.5.7",
     "mongodb": "^2.2.33"
   },

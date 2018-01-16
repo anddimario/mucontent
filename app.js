@@ -44,9 +44,6 @@ function response(req, res, data) {
 
 function renderResults(req, res, route, renderInfo) {
   res.statusCode = 200;
-  for (const header in route.headers) {
-    res.setHeader(header, route.headers[header]);
-  }
   // check if language is setted
   if (req.session && req.session.language) {
     // Check if locales exists for the language
@@ -164,21 +161,32 @@ function processRoute(req, res, route, parsedUrl) {
 
           }
         }
+        if (!route.headers['Location']) {
+          for (const header in route.headers) {
+            res.setHeader(header, route.headers[header]);
+          }
+        }
+        // Check if it's a redirection, change the status code
         if (lambdaTasks.length > 0) {
           async.parallel(lambdaTasks, (err, lambdasRes) => {
             if (err) {
               res.statusCode = 500;
               res.end(`Error ${err}`);
             } else {
-              // create render informations object
-              const renderInfo = {};
-              for (let i = 0; i < lambdasRes.length; i++) {
-                const info = lambdasRes[i];
-                for (let c in info) {
-                  renderInfo[c] = info[c];
+              if (route.headers['Location']) {
+                res.writeHead(302, { 'Location': `http://${route.headers['Location']}` });
+                res.end();
+              } else {
+                // create render informations object
+                const renderInfo = {};
+                for (let i = 0; i < lambdasRes.length; i++) {
+                  const info = lambdasRes[i];
+                  for (let c in info) {
+                    renderInfo[c] = info[c];
+                  }
                 }
+                renderResults(req, res, route, renderInfo);
               }
-              renderResults(req, res, route, renderInfo);
             }
           });
         } else {
@@ -197,8 +205,7 @@ const requestHandler = (req, res) => {
     processRoute(req, res, cachedRoute[req.headers.host + parsedUrl.pathname], parsedUrl);
   } else {
     const collection = db.get().collection('routes');
-    collection.findOne({ path: parsedUrl.pathname, host: req.headers.host }, (err, route) => {
-
+    collection.findOne({ path: parsedUrl.pathname, host: req.headers.host, method: req.method.toLowerCase() }, (err, route) => {
       if (route) {
         processRoute(req, res, route, parsedUrl);
       } else {
