@@ -1,3 +1,5 @@
+'use strict';
+
 exports.handler = (req, res, callback) => {
 
   if (req.url === '/logout') {
@@ -5,7 +7,7 @@ exports.handler = (req, res, callback) => {
   } else if (req.url === '/login'){
     require('./login')(req, res, callback);
   } else if (req.url === '/registration'){
-    require('./login')(req, res, callback);
+    require('./registration')(req, res, callback);
   } else {
     callback('notFound');
   }

@@ -34,7 +34,7 @@ function response(req, res, data) {
       const date = Date.now();
       process.stdout.write(`${date} ${err}`);
       res.statusCode = 500;
-      res.end();
+      res.end(err);
     } else {
       res.end(zipped);
     }
@@ -42,20 +42,48 @@ function response(req, res, data) {
 
 }
 
-function renderResults(req, res, route, renderInfo) {
-  res.statusCode = 200;
-  // check if language is setted
-  if (req.session && req.session.language) {
-    // Check if locales exists for the language
-    if (route.locales && route.locales[req.session.language]) {
-      const locale = route.locales[req.session.language];
-      for (let c in locale) {
-        renderInfo[c] = locale[c];
-      }
-    }
-  }
+function renderError(req, res, route, err) {
   // see if render template (html)
   if (route.headers['Content-Type'] === 'text/html') {
+
+    const templateHost = req.headers.host.split(':')[0];
+    // create the template
+    let template = '';
+    if (templates[`${templateHost}-header`]) {
+      template += templates[`${templateHost}-error-header`];
+    }
+    template += err.toString();
+    if (templates[`${templateHost}-footer`]) {
+      template += templates[`${templateHost}-error-footer`];
+    }
+    const html = ejs.render(template, renderInfo);
+    response(req, res, html);
+  } else {
+    response(req, res, {error: err.toString()});
+  }
+}
+
+function renderResults(req, res, route, renderInfo) {
+  res.statusCode = 200;
+  // see if render template (html)
+  if (route.headers['Content-Type'] === 'text/html') {
+    // check if language is setted
+    if (req.session && req.session.language) {
+      // Check if locales exists for the language
+      if (route.locales && route.locales[req.session.language]) {
+        const locale = route.locales[req.session.language];
+        for (let c in locale) {
+          renderInfo[c] = locale[c];
+        }
+      }
+    }
+    // Check if there are additional injectable header and footer
+    if (route.additionalHeader) {
+      renderInfo.additionalHeader = route.additionalHeader;
+    }
+    if (route.additionalFooter) {
+      renderInfo.additionalFooter = route.additionalFooter;
+    }
     const templateHost = req.headers.host.split(':')[0];
     // create the template
     let template = '';
@@ -69,7 +97,7 @@ function renderResults(req, res, route, renderInfo) {
     const html = ejs.render(template, renderInfo);
     response(req, res, html);
   } else {
-    res.end(result.body);
+    response(req, res, result.body);
   }
 }
 
@@ -136,8 +164,7 @@ function processRoute(req, res, route, parsedUrl) {
     }
     async.waterfall(middlewaresTasks, (err, resMiddlewares) => {
       if (err) {
-        res.statusCode = 500;
-        res.end(`Error ${err}`);
+        renderError(req, res, route, err);
       } else {
         const lambdaTasks = [];
         // add service, if it's defined
@@ -170,8 +197,7 @@ function processRoute(req, res, route, parsedUrl) {
         if (lambdaTasks.length > 0) {
           async.parallel(lambdaTasks, (err, lambdasRes) => {
             if (err) {
-              res.statusCode = 500;
-              res.end(`Error ${err}`);
+              renderError(req, res, route, err);             
             } else {
               if (route.headers['Location']) {
                 res.writeHead(302, { 'Location': `http://${route.headers['Location']}` });

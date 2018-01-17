@@ -6,19 +6,18 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it on
 - pure nodejs, few dependencies
 - expressjs route style
 - multisite, multi content, multi language, modular
-- ejs templates
+- views with ejs templates
 - gzip responses
 - cors (optional)
 - custom headers (optional)
 - middlewares (functions executed before the service)
 - widgets (add templates render functions)
 - built-in middlewares: cookie, authorize, validation
+- auth and user services
+- error pages
 
 ### Todo
-- user manager
-- error pages
 - single host routes manager
-- init scripts
 - ....
 
 ### Requirements
@@ -31,9 +30,8 @@ Nodejs (tested with v8.9.4) and mongodb (tested with v3.2)
 or: `DATABASE='mongodb://127.0.0.1:27017/mucontent' node app.js`
 
 ### Init scripts
-Run with: `DATABASE='<URL>' node scripts/<SCRIPT_NAME> <HOST>`   
-Available scripts:
-- initAuth: create the auth service required routes (login, logout, registration)
+Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <HOST>`   
+**NOTE** Init scripts are usually in the service's directory
 
 ### Route example payload
 ```
@@ -71,7 +69,12 @@ db.routes.insert({
 **NOTE** Middlewares are executed in the defined order and before the service, widgets are executed in parallel with service.
 
 ### Templates and views
-In `templates` directory there are header and footer for each site (`<SITE_NAME>-header.ejs` and `<SITE_NAME>-footer.ejs`), views are stored in each route saved on mongodb.
+In `templates` directory there are header and footer for each site (`<SITE_HOST>-header.ejs` and `<SITE_HOST>-footer.ejs`), and for errors (`<SITE_HOST>-error-header.ejs` and `<SITE_HOST>-error-footer.ejs`) . Views are stored in each route saved on mongodb.
+
+### Additional header and footer
+You can add additional header and footer for every route, for example for javascript or css. Add in your header template: `<%= additionalHeader %>` of in footer: `<%= additionalHeader %>`    
+Then in your route object in mongodb add the fields.   
+**NOTE** This fields must be strings.
 
 ### Add a service
 Simple add a directory in `services` with `index.js` in expressjs route style. You can see an example with hello world and users.
