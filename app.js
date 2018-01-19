@@ -17,7 +17,7 @@ fs.readdir('./templates', function (err, files) {
   files.forEach(file => {
     fs.readFile(`./templates/${file}`, { encoding: 'utf8' }, (err, content) => {
       if (err) {
-        process.stdout.write(err.toString());
+        process.stderr.write(`${err.toString()}\r\n`);
         process.exit(1);
       } else {
         const name = file.split('.')[0];
@@ -32,7 +32,7 @@ function response(req, res, data) {
   zlib.gzip(data, (err, zipped) => {
     if (err) {
       const date = Date.now();
-      process.stdout.write(`${date} ${err}`);
+      process.stderr.write(`${date} ${err}\r\n`);
       res.statusCode = 500;
       res.end(err);
     } else {
@@ -117,7 +117,7 @@ function processRoute(req, res, route, parsedUrl) {
 
   const body = [];
   req.on('error', function (err) {
-    process.stdout.write(err.toString());
+    process.stderr.write(`${err.toString()}\r\n`);
   }).on('data', function (chunk) {
     body.push(chunk);
   }).on('end', function () {
@@ -246,7 +246,7 @@ const server = http.createServer(requestHandler);
 // Connect to Mongo on start
 db.connect(process.env.DATABASE, function (err) {
   if (err) {
-    process.stdout.write('Unable to connect to Mongo.');
+    process.stderr.write('Unable to connect to Mongo.\r\n');
     process.exit(1);
   } else {
     const collection = db.get().collection('routes');
@@ -261,7 +261,7 @@ db.connect(process.env.DATABASE, function (err) {
 
     server.listen(process.env.PORT || 3000, (err) => {
       if (err) {
-        process.stdout.write(err.toString());
+        process.stderr.write(`${err.toString()}\r\n`);
         process.exit(1);
       }
       process.stdout.write(`Started on ${process.env.PORT | 3000}\r\n`);

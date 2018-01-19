@@ -26,8 +26,9 @@ Nodejs (tested with v8.9.4) and mongodb (tested with v3.2)
 ### Installation
 - clone the repo
 - install: `npm install`
-- Run dev mode (require nodemon): `npm run dev`     
+- run dev mode (require nodemon): `npm run dev`     
 or: `DATABASE='mongodb://127.0.0.1:27017/mucontent' node app.js`
+- (optional) initialize `auth` and `users` services, you must run the init script as describe below
 
 ### Init scripts
 Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <HOST>`   
@@ -47,6 +48,8 @@ Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <HOST>`
   cors: true, // optional, if true, enable cors
   headers: {}, // optional, header object
   cached: true, // optional, if set and true, routes are export in memory on app startup
+  additionalHeader: '', // optional, add header informations
+  additionalFooter: '', // optional, add footer informations
 }
 ```
 
@@ -167,5 +170,8 @@ db.routes.insert({
 ### Redirection
 If you need a redirection, set the header in `headers` values as:    
 `'Location': <YOUR_ADDRESS>`
+
+### Extras
+- [ansible-mucontent](https://github.com/anddimario/mucontent): ansible configuration for a mucontent sistem
 
 License: **MIT**
