@@ -226,6 +226,8 @@ function processRoute(req, res, route, parsedUrl) {
 
 const requestHandler = (req, res) => {
   const parsedUrl = url.parse(req.url, true);
+  // remove www from host
+  req.headers.host = req.headers.host.replace('www.', '');
   // Check if in cache
   if (cachedRoute[req.headers.host + parsedUrl.pathname]) {
     processRoute(req, res, cachedRoute[req.headers.host + parsedUrl.pathname], parsedUrl);
