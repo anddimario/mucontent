@@ -4,14 +4,15 @@
   "description": "Multi site, multi content, multi language, modular CMS",
   "main": "app.js",
   "scripts": {
-    "dev": "DATABASE='mongodb://127.0.0.1:27017/mucontent' nodemon app.js"
+    "dev": "DATABASE='mongodb://127.0.0.1:27017/mucontent' nodemon app.js",
+    "test": "DATABASE='mongodb://127.0.0.1:27017/mucontent' mocha tests/"
   },
   "dependencies": {
     "ajv": "^5.1.0",
     "async": "^2.6.0",
     "bcrypt": "^1.0.3",
-    "ejs": "^2.5.7",
-    "mongodb": "^2.2.33"
+    "mongodb": "^2.2.33",
+    "nunjucks": "^3.0.1"
   },
   "author": "Andrea Di Mario",
   "license": "MIT"

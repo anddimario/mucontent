@@ -22,6 +22,7 @@ async function init() {
       {
         path: '/login',
         method: 'get',
+        middlewares: ['cookie'],
         host: process.argv[2],
         view: '<form method="POST" action="/login"><input type="text" name="email"><input type="password" name="password"><input type="submit" value="Login"></form>',
         headers: {
@@ -63,6 +64,7 @@ async function init() {
         service: 'auth',
         middlewares: ['validation'],
         headers: {
+          'Content-Type': 'text/html',
           'Location': process.argv[2]
         },
         validators: {

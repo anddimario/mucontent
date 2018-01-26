@@ -15,7 +15,7 @@ async function init() {
         service: 'users',
         permissions: ['user'],
         middlewares: ['cookie', 'authorize'],
-        view: '<%= email %>',
+        view: '{{ email }}',
         headers: {
           'Content-Type': 'text/html',
         }
@@ -108,7 +108,6 @@ async function init() {
         path: '/admin/users/create',
         method: 'post',
         host: process.argv[2],
-        service: 'auth',
         permissions: ['admin'],
         middlewares: ['cookie', 'authorize', 'validation'],
         headers: {
@@ -129,7 +128,7 @@ async function init() {
         service: 'users',
         permissions: ['admin'],
         middlewares: ['cookie', 'authorize', 'validation'],
-        view: '<%= email %>',
+        view: '{{ email }}',
         headers: {
           'Content-Type': 'text/html',
         },
@@ -147,7 +146,7 @@ async function init() {
         service: 'users',
         permissions: ['admin'],
         middlewares: ['cookie', 'authorize', 'validation'],
-        view: '<%= email %>',
+        view: '{% for user in users %}{{ user.email }}{% endfor %}',
         headers: {
           'Content-Type': 'text/html',
         }

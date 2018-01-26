@@ -1,24 +1,25 @@
 'use strict';
 
 exports.handler = (req, res, callback) => {
+  const path = req.routeInformations.path;
 
-  if (req.url === '/profile') {
+  if (path === '/profile') {
     require('./get')(req, res, callback);
-  } else if (req.url === '/profile/remove'){
+  } else if (path === '/profile/remove'){
     require('./remove')(req, res, callback);
-  } else if (req.url === '/profile/update'){
+  } else if (path === '/profile/update'){
     require('./update')(req, res, callback);
-  } else if (req.url === '/profile/update/password'){
+  } else if (path === '/profile/update/password'){
     require('./updatePassword')(req, res, callback);
-  } else if (req.url === '/admin/users/create'){
+  } else if (path === '/admin/users/create'){
     require('./admin/create')(req, res, callback);
-  } else if (req.url === '/admin/users'){
+  } else if (path === '/admin/users'){
     require('./admin/get')(req, res, callback);
-  } else if (req.url === '/admin/users/list'){
+  } else if (path === '/admin/users/list'){
     require('./admin/list')(req, res, callback);
-  } else if (req.url === '/admin/users/update'){
+  } else if (path === '/admin/users/update'){
     require('./admin/update')(req, res, callback);
-  } else if (req.url === '/admin/users/remove'){
+  } else if (path === '/admin/users/remove'){
     require('./admin/remove')(req, res, callback);
   } else {
     callback('notFound');

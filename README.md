@@ -4,9 +4,9 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it on
 
 ### Features
 - pure nodejs, few dependencies
-- expressjs route style
+- expressjs style route
 - multisite, multi content, multi language, modular
-- views with ejs templates
+- views with nunjucks templates
 - gzip responses
 - cors (optional)
 - custom headers (optional)
@@ -14,11 +14,15 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it on
 - widgets (add templates render functions)
 - built-in middlewares: cookie, authorize, validation
 - auth and user services
+- single host and multi hosts routes manager
 - error pages
 
 ### Todo
-- single host routes manager
-- ....
+- services: content and image manager
+- middlewares: rate limit
+- services' doc
+- improve routes manager
+- ...
 
 ### Requirements
 Nodejs (tested with v8.9.4) and mongodb (tested with v3.2)

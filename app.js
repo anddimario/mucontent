@@ -6,8 +6,10 @@ const url = require('url');
 const db = require('./db');
 const async = require('async');
 const fs = require('fs');
-const ejs = require('ejs');
 const zlib = require('zlib');
+const nunjucks = require('nunjucks');
+
+nunjucks.configure({ autoescape: true });
 
 const templates = {};
 const cachedRoute = {};
@@ -45,21 +47,24 @@ function response(req, res, data) {
 function renderError(req, res, route, err) {
   // see if render template (html)
   if (route.headers['Content-Type'] === 'text/html') {
-
     const templateHost = req.headers.host.split(':')[0];
     // create the template
     let template = '';
-    if (templates[`${templateHost}-header`]) {
+    if (templates[`${templateHost}-error-header`]) {
       template += templates[`${templateHost}-error-header`];
     }
     template += err.toString();
-    if (templates[`${templateHost}-footer`]) {
+    if (templates[`${templateHost}-error-footer`]) {
       template += templates[`${templateHost}-error-footer`];
     }
-    const html = ejs.render(template, renderInfo);
-    response(req, res, html);
+    try {
+      const html = nunjucks.renderString(template, {});
+      response(req, res, html);
+    } catch (e) {
+      response(req, res, err.toString());
+    }
   } else {
-    response(req, res, {error: err.toString()});
+    response(req, res, { error: err.toString() });
   }
 }
 
@@ -94,10 +99,14 @@ function renderResults(req, res, route, renderInfo) {
     if (templates[`${templateHost}-footer`]) {
       template += templates[`${templateHost}-footer`];
     }
-    const html = ejs.render(template, renderInfo);
-    response(req, res, html);
+    try {
+      const html = nunjucks.renderString(template, renderInfo);
+      response(req, res, html);
+    } catch (e) {
+      renderError(req, res, route, e);
+    }
   } else {
-    response(req, res, result.body);
+    response(req, res, renderInfo.body);
   }
 }
 
@@ -134,7 +143,9 @@ function processRoute(req, res, route, parsedUrl) {
       req.params = parsedUrl.query
     }
     // add useful route informations to req
-    req.routeInformations = {};
+    req.routeInformations = {
+      path: parsedUrl.pathname
+    };
     if (route.permissions) {
       req.routeInformations.permissions = route.permissions;
     }
@@ -197,7 +208,7 @@ function processRoute(req, res, route, parsedUrl) {
         if (lambdaTasks.length > 0) {
           async.parallel(lambdaTasks, (err, lambdasRes) => {
             if (err) {
-              renderError(req, res, route, err);             
+              renderError(req, res, route, err);
             } else {
               if (route.headers['Location']) {
                 res.writeHead(302, { 'Location': `http://${route.headers['Location']}` });
