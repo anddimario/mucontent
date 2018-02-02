@@ -1,6 +1,9 @@
 'use strict';
 const Ajv = require('ajv');
-const ajv = new Ajv();
+const ajv = new Ajv({
+  allErrors: true,
+  removeAdditional: true
+});
 
 exports.handler = (req, res, callback) => {
   let data;

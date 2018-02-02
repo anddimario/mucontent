@@ -1,5 +1,5 @@
 ## Mucontent
-Multi site, multi content, multi language, modular CMS. The idea is to use it on single machine, or on a distribuite env, with mongodb, or cloud services (azure cosmodb, mlab etc).    
+Multi site, multi content, multi language, modular CMS. The idea is to use it from single server, to cloud, with mongodb, or cloud services (azure cosmodb, mlab etc).    
 **Status** ALPHA
 
 ### Features
@@ -20,8 +20,9 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it on
 ### Todo
 - services: content and image manager
 - middlewares: rate limit
-- services' doc
+- embedded security
 - improve routes manager
+- services' doc
 - ...
 
 ### Requirements
@@ -42,6 +43,6 @@ Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <HOST>`
 Read on [wiki](https://github.com/anddimario/mucontent/wiki)
 
 ### Extras
-- [ansible-mucontent](https://github.com/anddimario/ansible-mucontent): ansible configuration for a mucontent sistem
+- [ansible-mucontent](https://github.com/anddimario/ansible-mucontent): ansible configuration for a mucontent system
 
 License: **MIT**
