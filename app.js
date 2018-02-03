@@ -31,6 +31,9 @@ fs.readdir('./templates', function (err, files) {
 
 function response(req, res, data) {
   res.setHeader('Content-Encoding', 'gzip');
+  if (typeof data !== 'string') {
+    data = JSON.stringify(data);
+  }
   zlib.gzip(data, (err, zipped) => {
     if (err) {
       const date = Date.now();

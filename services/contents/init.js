@@ -39,11 +39,12 @@ async function init() {
           'Content-Type': 'text/html',
         }
       },
-      // create user post
+      // create content post
       {
         path: '/admin/contents/create',
         method: 'post',
         host: process.argv[2],
+        service: 'contents',
         permissions: ['admin'],
         middlewares: ['cookie', 'authorize', 'validation'],
         headers: {

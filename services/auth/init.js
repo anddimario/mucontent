@@ -64,7 +64,6 @@ async function init() {
         service: 'auth',
         middlewares: ['validation'],
         headers: {
-          'Content-Type': 'text/html',
           'Location': process.argv[2]
         },
         validators: {
