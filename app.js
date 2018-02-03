@@ -195,7 +195,7 @@ function processRoute(req, res, route, parsedUrl) {
           for (let i = 0; i < route.widgets.length; i++) {
 
             lambdaTasks.push((callback) => {
-              const widget = require(`./widgets/${route.middlewares[i]}`).handler(req, res, (err, results) => {
+              const widget = require(`./widgets/${route.widgets[i]}`).handler(req, res, (err, results) => {
                 callback(err, results);
               });
             });

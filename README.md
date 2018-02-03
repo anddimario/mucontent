@@ -36,8 +36,8 @@ or: `DATABASE='mongodb://127.0.0.1:27017/mucontent' node app.js`
 - (optional) initialize `auth` and `users` services, you must run the init script as describe below
 
 ### Init scripts
-Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <HOST>`   
-**NOTE** Init scripts are usually in the service's directory
+Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <install/uninstall> <HOST>`   
+**NOTE** Init scripts are usually in the service's directory and should have `install` and `uninstall` options.
 
 ### Docs
 Read on [wiki](https://github.com/anddimario/mucontent/wiki)
