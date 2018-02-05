@@ -21,15 +21,14 @@ const services = [
     method: 'get',
     host: process.argv[3],
     middlewares: ['cookie'],
-    widgets: ['adminOptions'],
     service: 'contents',
-    view: '{% for content in contents %}<a href="/contents?id={{ content._id }}">{{ content.name }}</a> {{ adminOptions }}{% endfor %}',
+    view: '{% for content in contents %}<a href="/contents?id={{ content._id }}">{{ content.name }}</a> {% if (userRole === "admin") %} <a href="/admin/contents/remove?id={{ content._id }}">remove</a> <a href="/admin/contents/update?id={{ content._id }}">update</a> {% endif %}{% endfor %}',
     headers: {
       'Content-Type': 'text/html',
     }
   },
   // ADMIN
-  // create user view
+  // create content view
   {
     path: '/admin/contents/create',
     method: 'get',
@@ -50,12 +49,60 @@ const services = [
     permissions: ['admin'],
     middlewares: ['cookie', 'authorize', 'validation'],
     headers: {
-      'Location': process.argv[3]
+      'Location': `${process.argv[3]}/contents/list`
     },
     validators: {
       properties: {
         "name": { "type": "string" },
         "type": { "type": "string" }
+      }
+    }
+  },
+  // remove content
+  {
+    path: '/admin/contents/remove',
+    method: 'get',
+    host: process.argv[3],
+    service: 'contents',
+    permissions: ['admin'],
+    middlewares: ['cookie', 'authorize', 'validation'],
+    headers: {
+      'Location': `${process.argv[3]}/contents/list`
+    },
+    validators: {
+      properties: {
+        "id": { "type": "string" },
+      }
+    }
+  },
+  // update content view
+  {
+    path: '/admin/contents/update',
+    method: 'get',
+    permissions: ['admin'],
+    middlewares: ['cookie', 'authorize'],
+    service: 'contents',
+    host: process.argv[3],
+    view: '<form method="POST" action="/admin/contents/update"><input type="hidden" name="id" value="{{ _id }}"><input type="text" name="name" value="{{ name }}"><input type="submit" value="Update"></form>',
+    headers: {
+      'Content-Type': 'text/html',
+    }
+  },
+  // update content post
+  {
+    path: '/admin/contents/update',
+    method: 'post',
+    host: process.argv[3],
+    service: 'contents',
+    permissions: ['admin'],
+    middlewares: ['cookie', 'authorize', 'validation'],
+    headers: {
+      'Location': `${process.argv[3]}/contents/list`
+    },
+    validators: {
+      properties: {
+        "name": { "type": "string" },
+        "id": { "type": "string" }
       }
     }
   },

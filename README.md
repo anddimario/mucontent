@@ -14,14 +14,15 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it fr
 - widgets (add templates render functions)
 - built-in middlewares: cookie, authorize, validation
 - auth and user services
+- contents based on ajv schema
 - single host and multi hosts routes manager
 - error pages
 
 ### Todo
-- services: content and image manager
+- services: image manager
 - middlewares: rate limit
 - embedded security
-- improve routes manager
+- improve routes and content manager
 - services' doc
 - ...
 
