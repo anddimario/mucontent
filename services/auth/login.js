@@ -4,8 +4,8 @@ const bcrypt = require('bcrypt');
 
 module.exports = async (req, res, callback) => {
   try {
-    const collection = db.get().collection('users');
-    const user = await collection.findOne({ email: req.body.email, host: req.headers.host }, { email: 1, password: 1 });
+    const collection = db.get().collection(`${req.routeInformations.md5Host}_users`);
+    const user = await collection.findOne({ email: req.body.email}, { email: 1, password: 1 });
     if (!user) {
       callback('userNotExists');
     } else {

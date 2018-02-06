@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 
 module.exports = async (req, res, callback) => {
   try {
-    const collection = db.get().collection('users');
+    const collection = db.get().collection(`${req.routeInformations.md5Host}_users`);
     const value = req.body;
     value.host = req.headers.host;
     value.registrationDate = new Date();

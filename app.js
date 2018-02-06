@@ -8,6 +8,7 @@ const async = require('async');
 const fs = require('fs');
 const zlib = require('zlib');
 const nunjucks = require('nunjucks');
+const crypto = require('crypto');
 
 nunjucks.configure({ autoescape: true });
 
@@ -147,13 +148,17 @@ function processRoute(req, res, route, parsedUrl) {
     }
     // add useful route informations to req
     req.routeInformations = {
-      path: parsedUrl.pathname
+      path: parsedUrl.pathname,
+      md5Host: crypto.createHash('md5').update(req.headers.host).digest("hex")
     };
     if (route.permissions) {
       req.routeInformations.permissions = route.permissions;
     }
     if (route.validators) {
       req.routeInformations.validators = route.validators;
+    }
+    if (route.rateLimit) {
+      req.routeInformations.rateLimit = route.rateLimit;
     }
     // use middlewares (waterfall)
     const middlewaresTasks = [];

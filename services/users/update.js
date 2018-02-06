@@ -4,7 +4,7 @@ const ObjectId = require('mongodb').ObjectID;
 
 module.exports = async (req, res, callback) => {
   try {
-    const collection = db.get().collection('users');
+    const collection = db.get().collection(`${req.routeInformations.md5Host}_users`);
     const o_id = new ObjectId(req.session.userId);
     await collection.update({ _id: o_id }, { $set: req.body });
     callback(null, 'done');

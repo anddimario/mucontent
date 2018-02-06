@@ -4,7 +4,7 @@ const ObjectId = require('mongodb').ObjectID;
 
 module.exports = async (req, res, callback) => {
   try {
-    const collection = db.get().collection('contents');
+    const collection = db.get().collection(`${req.routeInformations.md5Host}_contents`);
     const o_id = new ObjectId(req.params.id);
     await collection.remove({ _id: o_id });
     callback(null, 'done');

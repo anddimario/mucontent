@@ -12,7 +12,7 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it fr
 - custom headers (optional)
 - middlewares (functions executed before the service)
 - widgets (add templates render functions)
-- built-in middlewares: cookie, authorize, validation
+- built-in middlewares: cookie, authorize, validation, rate limit
 - auth and user services
 - contents based on ajv schema
 - single host and multi hosts routes manager
@@ -20,7 +20,6 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it fr
 
 ### Todo
 - services: image manager
-- middlewares: rate limit
 - embedded security
 - improve routes and content manager
 - services' doc
