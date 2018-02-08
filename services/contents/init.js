@@ -13,7 +13,8 @@ const services = [
     view: '{{ name }}',
     headers: {
       'Content-Type': 'text/html',
-    }
+    },
+    projection: {'name': 1, 'type': 1}
   },
   // get list
   {
@@ -25,7 +26,8 @@ const services = [
     view: '{% for content in contents %}<a href="/contents?id={{ content._id }}">{{ content.name }}</a> {% if (userRole === "admin") %} <a href="/admin/contents/remove?id={{ content._id }}">remove</a> <a href="/admin/contents/update?id={{ content._id }}">update</a> {% endif %}{% endfor %}',
     headers: {
       'Content-Type': 'text/html',
-    }
+    },
+    projection: {'name': 1, 'type': 1}    
   },
   // ADMIN
   // create content view

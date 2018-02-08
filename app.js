@@ -160,6 +160,9 @@ function processRoute(req, res, route, parsedUrl) {
     if (route.rateLimit) {
       req.routeInformations.rateLimit = route.rateLimit;
     }
+    if (route.projection) {
+      req.routeInformations.projection = route.projection;
+    }
     // use middlewares (waterfall)
     const middlewaresTasks = [];
     if (route.middlewares) {
