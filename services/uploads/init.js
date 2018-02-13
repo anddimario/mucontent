@@ -3,72 +3,59 @@
 const db = require('../../db');
 
 const services = [
-  // get content
-  {
-    path: '/contents',
-    method: 'get',
-    host: process.argv[3],
-    service: 'contents',
-    view: '{{ name }}',
-    headers: {
-      'Content-Type': 'text/html',
-    },
-    projection: {'name': 1, 'type': 1}
-  },
+  // ADMIN
   // get list
   {
-    path: '/contents/list',
+    path: '/admin/uploads',
     method: 'get',
     host: process.argv[3],
     middlewares: ['cookie'],
-    service: 'contents',
-    view: '{% for content in contents %}<a href="/contents?id={{ content._id }}">{{ content.name }}</a> {% if (userRole === "admin") %} <a href="/admin/contents/remove?id={{ content._id }}">remove</a> <a href="/admin/contents/update?id={{ content._id }}">update</a> {% endif %}{% endfor %}',
+    service: 'uploads',
+    view: '{% for upload in uploads %}{{ upload.name }} <a href="/admin/uploads/remove?id={{ upload._id }}">remove</a>{% endfor %}',
     headers: {
       'Content-Type': 'text/html',
     },
     projection: {'name': 1, 'type': 1}    
   },
-  // ADMIN
-  // create content view
+  // upload view
   {
-    path: '/admin/contents/create',
+    path: '/admin/uploads/create',
     method: 'get',
     permissions: ['admin'],
     middlewares: ['cookie', 'authorize'],
     host: process.argv[3],
-    view: '<form method="POST" action="/admin/contents/create"><input type="text" name="name"><input type="text" name="type"><input type="submit" value="Create"></form>',
+    view: '<form method="POST" enctype="multipart/form-data" action="/admin/uploads/create"><input type="text" name="name"><input type="file" name="upload" multiple="multiple"><input type="submit" value="Upload"></form>',
     headers: {
       'Content-Type': 'text/html',
     }
   },
-  // create content post
+  // upload post
   {
-    path: '/admin/contents/create',
+    path: '/admin/uploads/create',
     method: 'post',
     host: process.argv[3],
-    service: 'contents',
+    service: 'uploads',
     permissions: ['admin'],
     middlewares: ['cookie', 'authorize', 'validation'],
     headers: {
-      'Location': `${process.argv[3]}/contents/list`
+      'Location': `${process.argv[3]}/admin/uploads`
     },
     validators: {
       properties: {
         "name": { "type": "string" },
-        "type": { "type": "string" }
       }
     }
   },
-  // remove content
+  // remove upload
   {
-    path: '/admin/contents/remove',
+    path: '/admin/uploads/remove',
     method: 'get',
     host: process.argv[3],
-    service: 'contents',
+    service: 'uploads',
     permissions: ['admin'],
     middlewares: ['cookie', 'authorize', 'validation'],
     headers: {
-      'Location': `${process.argv[3]}/contents/list`
+      'Location': `${process.argv[3]}/admin/uploads`
     },
     validators: {
       properties: {
@@ -76,38 +63,6 @@ const services = [
       }
     }
   },
-  // update content view
-  {
-    path: '/admin/contents/update',
-    method: 'get',
-    permissions: ['admin'],
-    middlewares: ['cookie', 'authorize'],
-    service: 'contents',
-    host: process.argv[3],
-    view: '<form method="POST" action="/admin/contents/update"><input type="hidden" name="id" value="{{ _id }}"><input type="text" name="name" value="{{ name }}"><input type="submit" value="Update"></form>',
-    headers: {
-      'Content-Type': 'text/html',
-    }
-  },
-  // update content post
-  {
-    path: '/admin/contents/update',
-    method: 'post',
-    host: process.argv[3],
-    service: 'contents',
-    permissions: ['admin'],
-    middlewares: ['cookie', 'authorize', 'validation'],
-    headers: {
-      'Location': `${process.argv[3]}/contents/list`
-    },
-    validators: {
-      properties: {
-        "name": { "type": "string" },
-        "id": { "type": "string" }
-      }
-    }
-  },
-
 ];
 
 async function install() {

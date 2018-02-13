@@ -9,6 +9,7 @@ const fs = require('fs');
 const zlib = require('zlib');
 const nunjucks = require('nunjucks');
 const crypto = require('crypto');
+const formidable = require('formidable');
 
 nunjucks.configure({ autoescape: true });
 
@@ -114,35 +115,7 @@ function renderResults(req, res, route, renderInfo) {
   }
 }
 
-function processRoute(req, res, route, parsedUrl) {
-  // Set CORS headers
-  if (route.cors) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, HEAD, DELETE, PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type,Accept,Origin,User-Agent,DNT,Cache-Control,X-Mx-ReqToken,Keep-Alive,X-Requested-With,If-Modified-Since');
-    if (req.method === 'OPTIONS') {
-      res.writeHead(200);
-      res.end();
-      return;
-    }
-  }
-
-  const body = [];
-  req.on('error', function (err) {
-    process.stderr.write(`${err.toString()}\r\n`);
-  }).on('data', function (chunk) {
-    body.push(chunk);
-  }).on('end', function () {
-    let stringBody = Buffer.concat(body).toString();
-    if (stringBody && (req.headers['content-type'] === 'application/x-www-form-urlencoded')) {
-      stringBody = querystring.parse(stringBody);
-      //stringBody = JSON.stringify(stringBody);
-    }
-
-    if (stringBody) {
-      req.body = stringBody;
-    }
+function callServices(req, res, route, parsedUrl) {
     if (parsedUrl.query) {
       req.params = parsedUrl.query
     }
@@ -243,7 +216,44 @@ function processRoute(req, res, route, parsedUrl) {
         }
       }
     });
+
+}
+
+function processRoute(req, res, route, parsedUrl) {
+  // Set CORS headers
+  if (route.cors) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, HEAD, DELETE, PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type,Accept,Origin,User-Agent,DNT,Cache-Control,X-Mx-ReqToken,Keep-Alive,X-Requested-With,If-Modified-Since');
+    if (req.method === 'OPTIONS') {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+  }
+
+  if (req.method.toLowerCase() === 'post') {
+    // chiama formidable
+  const form = new formidable.IncomingForm();
+  form.encoding = 'utf-8';
+  form.uploadDir = process.env.UPLOAD_DIR;
+  form.keepExtensions = true;
+  // Other options on https://github.com/felixge/node-formidable
+  form.parse(req, (err, fields, files) => {
+    if (err) {
+      renderError(err);
+    } else {
+      req.body = fields;
+      if (files) {
+        req.files = files;
+      }
+      callServices(req, res, route, parsedUrl);
+    }
   });
+  } else {
+    callServices(req, res, route, parsedUrl);
+  }
 }
 
 const requestHandler = (req, res) => {

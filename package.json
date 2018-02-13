@@ -4,13 +4,13 @@
   "description": "Multi site, multi content, multi language, modular CMS",
   "main": "app.js",
   "scripts": {
-    "dev": "DATABASE='mongodb://127.0.0.1:27017/mucontent' nodemon app.js",
-    "test": "DATABASE='mongodb://127.0.0.1:27017/mucontent' mocha tests/"
+    "dev": "DATABASE='mongodb://127.0.0.1:27017/mucontent' UPLOAD_DIR='/tmp' nodemon app.js"
   },
   "dependencies": {
     "ajv": "^5.1.0",
     "async": "^2.6.0",
     "bcrypt": "^1.0.3",
+    "formidable": "^1.1.1",
     "mongodb": "^2.2.33",
     "nunjucks": "^3.0.1"
   },

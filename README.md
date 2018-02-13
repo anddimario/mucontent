@@ -15,13 +15,13 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it fr
 - built-in middlewares: cookie, authorize, validation, rate limit
 - auth and user services
 - contents based on ajv schema
+- uploads on disk
 - single host and multi hosts routes manager
 - error pages
 
 ### Todo
-- services: image manager
+- improve services
 - embedded security
-- improve routes and content manager
 - services' doc
 - ...
 
@@ -33,7 +33,8 @@ Nodejs (tested with v8.9.4) and mongodb (tested with v3.2)
 - install: `npm install`
 - run dev mode (require nodemon): `npm run dev`     
 or: `DATABASE='mongodb://127.0.0.1:27017/mucontent' node app.js`
-- (optional) initialize `auth` and `users` services, you must run the init script as describe below
+- (optional) services are not enabled, you must run the init script as describe below
+- (optional) `UPLOAD_DIR` is used by uploads service
 
 ### Init scripts
 Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <install/uninstall> <HOST>`   

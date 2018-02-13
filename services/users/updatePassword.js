@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 
 module.exports = async (req, res, callback) => {
   try {
-    const collection = db.get().collection(`${req.routeInformations.md5Host}_users`);
+    const collection = db.get().collection(`users${req.routeInformations.md5Host}`);
     const o_id = new ObjectId(req.session.userId);
     const value = {};
     const saltRounds = 10;

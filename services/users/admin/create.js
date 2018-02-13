@@ -4,9 +4,8 @@ const bcrypt = require('bcrypt');
 
 module.exports = async (req, res, callback) => {
   try {
-    const collection = db.get().collection(`${req.routeInformations.md5Host}_users`);
+    const collection = db.get().collection(`users${req.routeInformations.md5Host}`);
     const value = req.body;
-    value.host = req.headers.host;
     value.registrationDate = new Date();
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);

@@ -4,11 +4,11 @@ const ObjectId = require('mongodb').ObjectID;
 
 module.exports = async (req, res, callback) => {
   try {
-    const collection = db.get().collection(`${req.routeInformations.md5Host}_contents`);
+    const collection = db.get().collection(`contents${req.routeInformations.md5Host}`);
     let projection = {};
     // Get user role, if userId exists
     if (req.session && req.session.userId) {
-      const users = db.get().collection(`${req.routeInformations.md5Host}_users`);
+      const users = db.get().collection(`users${req.routeInformations.md5Host}`);
       const user = await users.findOne({ _id: req.session.userId });
       if (user.role !== 'admin') {
         projection = req.routeInformations.projection;
