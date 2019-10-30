@@ -1,8 +1,9 @@
 ## Mucontent
+
 Multi site, multi content, multi language, modular CMS. The idea is to use it from single server, to cloud, with mongodb, or cloud services (azure cosmodb, mlab etc).    
-**Status** ALPHA
 
 ### Features
+
 - pure nodejs, few dependencies
 - expressjs style route
 - multisite, multi content, multi language, modular
@@ -20,30 +21,35 @@ Multi site, multi content, multi language, modular CMS. The idea is to use it fr
 - error pages
 
 ### Todo
+
 - improve services
 - embedded security
 - services' doc
 - ...
 
 ### Requirements
+
 Nodejs (tested with v8.9.4) and mongodb (tested with v3.2)
 
 ### Installation
+
 - clone the repo
 - install: `npm install`
-- run dev mode (require nodemon): `npm run dev`     
-or: `DATABASE='mongodb://127.0.0.1:27017/mucontent' node app.js`
+- run dev mode (require nodemon): `npm run dev`
 - (optional) services are not enabled, you must run the init script as describe below
 - (optional) `UPLOAD_DIR` is used by uploads service
 
 ### Init scripts
-Run with: `DATABASE='<URL>' node <PATH>/<SCRIPT_NAME> <install/uninstall> <HOST>`   
+
+Run with: `DATABASE_URL='<url>' DATABASE='<dbname>' node <PATH>/<SCRIPT_NAME> <install/uninstall> <HOST>`
 **NOTE** Init scripts are usually in the service's directory and should have `install` and `uninstall` options.
 
 ### Docs
+
 Read on [wiki](https://github.com/anddimario/mucontent/wiki)
 
 ### Extras
+
 - [ansible-mucontent](https://github.com/anddimario/ansible-mucontent): ansible configuration for a mucontent system
 
 License: **MIT**

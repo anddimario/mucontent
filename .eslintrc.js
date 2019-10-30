@@ -5,7 +5,6 @@ module.exports = {
     "es6": true,
     "node": true
   },
-  "installedESLint": true,
   "extends": "eslint:recommended",
   "rules": {
     "block-spacing": [

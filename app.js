@@ -116,106 +116,106 @@ function renderResults(req, res, route, renderInfo) {
 }
 
 function callServices(req, res, route, parsedUrl) {
-    if (parsedUrl.query) {
-      req.params = parsedUrl.query
-    }
-    // add useful route informations to req
-    req.routeInformations = {
-      path: parsedUrl.pathname,
-      md5Host: crypto.createHash('md5').update(req.headers.host).digest("hex")
-    };
-    if (route.permissions) {
-      req.routeInformations.permissions = route.permissions;
-    }
-    if (route.validators) {
-      req.routeInformations.validators = route.validators;
-    }
-    if (route.rateLimit) {
-      req.routeInformations.rateLimit = route.rateLimit;
-    }
-    if (route.projection) {
-      req.routeInformations.projection = route.projection;
-    }
-    // use middlewares (waterfall)
-    const middlewaresTasks = [];
-    if (route.middlewares) {
-      for (let i = 0; i < route.middlewares.length; i++) {
-        // First task
-        if (i === 0) {
-          middlewaresTasks.push((callback) => {
-            require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
-              callback(err, results);
-            })
-          });
-        } else {
-          middlewaresTasks.push((previous, callback) => {
-            req.previousMiddleware = previous; // pass previous results to next, with previousMiddleware
-            require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
-              callback(err, results);
-            })
-          });
-        }
-      }
-    }
-    async.waterfall(middlewaresTasks, (err, resMiddlewares) => {
-      if (err) {
-        renderError(req, res, route, err);
+  if (parsedUrl.query) {
+    req.params = parsedUrl.query
+  }
+  // add useful route informations to req
+  req.routeInformations = {
+    path: parsedUrl.pathname,
+    md5Host: crypto.createHash('md5').update(req.headers.host).digest("hex")
+  };
+  if (route.permissions) {
+    req.routeInformations.permissions = route.permissions;
+  }
+  if (route.validators) {
+    req.routeInformations.validators = route.validators;
+  }
+  if (route.rateLimit) {
+    req.routeInformations.rateLimit = route.rateLimit;
+  }
+  if (route.projection) {
+    req.routeInformations.projection = route.projection;
+  }
+  // use middlewares (waterfall)
+  const middlewaresTasks = [];
+  if (route.middlewares) {
+    for (let i = 0; i < route.middlewares.length; i++) {
+      // First task
+      if (i === 0) {
+        middlewaresTasks.push((callback) => {
+          require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
+            callback(err, results);
+          })
+        });
       } else {
-        const lambdaTasks = [];
-        // add service, if it's defined
-        if (route.service) {
-          const lambda = require(`${__dirname}/services/${route.service}/index`);
+        middlewaresTasks.push((previous, callback) => {
+          req.previousMiddleware = previous; // pass previous results to next, with previousMiddleware
+          require(`./middlewares/${route.middlewares[i]}`).handler(req, res, (err, results) => {
+            callback(err, results);
+          })
+        });
+      }
+    }
+  }
+  async.waterfall(middlewaresTasks, (err, resMiddlewares) => {
+    if (err) {
+      renderError(req, res, route, err);
+    } else {
+      const lambdaTasks = [];
+      // add service, if it's defined
+      if (route.service) {
+        const lambda = require(`${__dirname}/services/${route.service}/index`);
+        lambdaTasks.push((callback) => {
+          lambda.handler(req, res, (err, results) => {
+            callback(err, results)
+          });
+        });
+      }
+      // add widgets, if they exists
+      if (route.widgets) {
+        for (let i = 0; i < route.widgets.length; i++) {
+
           lambdaTasks.push((callback) => {
-            lambda.handler(req, res, (err, results) => {
-              callback(err, results)
+            const widget = require(`./widgets/${route.widgets[i]}`).handler(req, res, (err, results) => {
+              callback(err, results);
             });
           });
-        }
-        // add widgets, if they exists
-        if (route.widgets) {
-          for (let i = 0; i < route.widgets.length; i++) {
 
-            lambdaTasks.push((callback) => {
-              const widget = require(`./widgets/${route.widgets[i]}`).handler(req, res, (err, results) => {
-                callback(err, results);
-              });
-            });
-
-          }
-        }
-        if (!route.headers['Location']) {
-          for (const header in route.headers) {
-            res.setHeader(header, route.headers[header]);
-          }
-        }
-        // Check if it's a redirection, change the status code
-        if (lambdaTasks.length > 0) {
-          async.parallel(lambdaTasks, (err, lambdasRes) => {
-            if (err) {
-              renderError(req, res, route, err);
-            } else {
-              if (route.headers['Location']) {
-                res.writeHead(302, { 'Location': `http://${route.headers['Location']}` });
-                res.end();
-              } else {
-                // create render informations object
-                const renderInfo = {};
-                for (let i = 0; i < lambdasRes.length; i++) {
-                  const info = lambdasRes[i];
-                  for (let c in info) {
-                    renderInfo[c] = info[c];
-                  }
-                }
-                renderResults(req, res, route, renderInfo);
-              }
-            }
-          });
-        } else {
-          const renderInfo = {};
-          renderResults(req, res, route, renderInfo);
         }
       }
-    });
+      if (!route.headers['Location']) {
+        for (const header in route.headers) {
+          res.setHeader(header, route.headers[header]);
+        }
+      }
+      // Check if it's a redirection, change the status code
+      if (lambdaTasks.length > 0) {
+        async.parallel(lambdaTasks, (err, lambdasRes) => {
+          if (err) {
+            renderError(req, res, route, err);
+          } else {
+            if (route.headers['Location']) {
+              res.writeHead(302, { 'Location': `http://${route.headers['Location']}` });
+              res.end();
+            } else {
+              // create render informations object
+              const renderInfo = {};
+              for (let i = 0; i < lambdasRes.length; i++) {
+                const info = lambdasRes[i];
+                for (let c in info) {
+                  renderInfo[c] = info[c];
+                }
+              }
+              renderResults(req, res, route, renderInfo);
+            }
+          }
+        });
+      } else {
+        const renderInfo = {};
+        renderResults(req, res, route, renderInfo);
+      }
+    }
+  });
 
 }
 
@@ -235,28 +235,28 @@ function processRoute(req, res, route, parsedUrl) {
 
   if (req.method.toLowerCase() === 'post') {
     // chiama formidable
-  const form = new formidable.IncomingForm();
-  form.encoding = 'utf-8';
-  form.uploadDir = process.env.UPLOAD_DIR;
-  form.keepExtensions = true;
-  // Other options on https://github.com/felixge/node-formidable
-  form.parse(req, (err, fields, files) => {
-    if (err) {
-      renderError(err);
-    } else {
-      req.body = fields;
-      if (files) {
-        req.files = files;
+    const form = new formidable.IncomingForm();
+    form.encoding = 'utf-8';
+    form.uploadDir = process.env.UPLOAD_DIR;
+    form.keepExtensions = true;
+    // Other options on https://github.com/felixge/node-formidable
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        renderError(err);
+      } else {
+        req.body = fields;
+        if (files) {
+          req.files = files;
+        }
+        callServices(req, res, route, parsedUrl);
       }
-      callServices(req, res, route, parsedUrl);
-    }
-  });
+    });
   } else {
     callServices(req, res, route, parsedUrl);
   }
 }
 
-const requestHandler = (req, res) => {
+const requestHandler = async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   // remove www from host
   req.headers.host = req.headers.host.replace('www.', '');
@@ -265,20 +265,19 @@ const requestHandler = (req, res) => {
     processRoute(req, res, cachedRoute[req.headers.host + parsedUrl.pathname], parsedUrl);
   } else {
     const collection = db.get().collection('routes');
-    collection.findOne({ path: parsedUrl.pathname, host: req.headers.host, method: req.method.toLowerCase() }, (err, route) => {
-      if (route) {
-        processRoute(req, res, route, parsedUrl);
-      } else {
-        res.statusCode = 500;
-        res.end('Service not exists');
-      }
-    });
+    const route = await collection.findOne({ path: parsedUrl.pathname, host: req.headers.host, method: req.method.toLowerCase() });
+    if (route) {
+      processRoute(req, res, route, parsedUrl);
+    } else {
+      res.statusCode = 500;
+      res.end('Service not exists');
+    }
   }
 };
 
 const server = http.createServer(requestHandler);
 // Connect to Mongo on start
-db.connect(process.env.DATABASE, function (err) {
+db.connect(process.env.DATABASE_URL, function (err) {
   if (err) {
     process.stderr.write('Unable to connect to Mongo.\r\n');
     process.exit(1);
