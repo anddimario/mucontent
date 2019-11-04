@@ -4,12 +4,13 @@ const querystring = require('querystring');
 const http = require('http');
 const url = require('url');
 const db = require('./db');
-const async = require('async');
 const fs = require('fs');
 const zlib = require('zlib');
 const nunjucks = require('nunjucks');
 const crypto = require('crypto');
 const formidable = require('formidable');
+const { promisify } = require('util');
+const config = require('./config');
 
 nunjucks.configure({ autoescape: true });
 
@@ -82,7 +83,7 @@ function renderResults(req, res, route, renderInfo) {
       // Check if locales exists for the language
       if (route.locales && route.locales[req.session.language]) {
         const locale = route.locales[req.session.language];
-        for (let c in locale) {
+        for (const c in locale) {
           renderInfo[c] = locale[c];
         }
       }
@@ -115,14 +116,18 @@ function renderResults(req, res, route, renderInfo) {
   }
 }
 
-function callServices(req, res, route, parsedUrl) {
+const callServices = async (req, res, route, parsedUrl) => {
+  if (route.headers['Location']) {
+    res.writeHead(302, { Location: `http://${route.headers['Location']}` });
+    res.end();
+  }
   if (parsedUrl.query) {
-    req.params = parsedUrl.query
+    req.params = parsedUrl.query;
   }
   // add useful route informations to req
   req.routeInformations = {
     path: parsedUrl.pathname,
-    md5Host: crypto.createHash('md5').update(req.headers.host).digest("hex")
+    md5Host: crypto.createHash('md5').update(req.headers.host).digest('hex')
   };
   if (route.permissions) {
     req.routeInformations.permissions = route.permissions;
@@ -137,8 +142,13 @@ function callServices(req, res, route, parsedUrl) {
     req.routeInformations.projection = route.projection;
   }
   // use middlewares (waterfall)
-  const middlewaresTasks = [];
   if (route.middlewares) {
+    let previousResults = '';
+    for (const middleware of route.middlewares) {
+      req.previousMiddleware = previousResults; // pass previous results to next, with previousMiddleware
+      previousResults = await require(`./middlewares/${middleware}`).handler(req, res);
+    }
+    /*
     for (let i = 0; i < route.middlewares.length; i++) {
       // First task
       if (i === 0) {
@@ -155,8 +165,31 @@ function callServices(req, res, route, parsedUrl) {
           })
         });
       }
+    }*/
+  }
+  // create render informations object
+  const renderInfo = {};
+  // execute widgets, if they exists
+  if (route.widgets) {
+    for (const widget of route.widgets) {
+      const widgetResults = await require(`./widgets/${widget}`).handler(req, res);
+      // parse results and add to renderInfo
+      for (const result in widgetResults) {
+        renderInfo[result] = widgetResults[result];
+      }
     }
   }
+  // execute service, if it's defined
+  if (route.service) {
+    const serviceResults = await require(`${__dirname}/services/${route.service}/index`).handler(req, res);
+    // parse results and add to renderInfo
+    for (const result in serviceResults) {
+      renderInfo[result] = serviceResults[result];
+    }
+  }
+  renderResults(req, res, route, renderInfo);
+
+  /*
   async.waterfall(middlewaresTasks, (err, resMiddlewares) => {
     if (err) {
       renderError(req, res, route, err);
@@ -215,11 +248,12 @@ function callServices(req, res, route, parsedUrl) {
         renderResults(req, res, route, renderInfo);
       }
     }
+
   });
+*/
+};
 
-}
-
-function processRoute(req, res, route, parsedUrl) {
+const processRoute = async (req, res, route, parsedUrl) => {
   // Set CORS headers
   if (route.cors) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -237,24 +271,20 @@ function processRoute(req, res, route, parsedUrl) {
     // chiama formidable
     const form = new formidable.IncomingForm();
     form.encoding = 'utf-8';
-    form.uploadDir = process.env.UPLOAD_DIR;
+    form.uploadDir = config.UPLOAD_DIR;
     form.keepExtensions = true;
     // Other options on https://github.com/felixge/node-formidable
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        renderError(err);
-      } else {
-        req.body = fields;
-        if (files) {
-          req.files = files;
-        }
-        callServices(req, res, route, parsedUrl);
-      }
-    });
+    const formParseAsync = promisify(form.parse);
+    const { fields, files } = await formParseAsync(req);
+    req.body = fields;
+    if (files) {
+      req.files = files;
+    }
+    await callServices(req, res, route, parsedUrl);
   } else {
-    callServices(req, res, route, parsedUrl);
+    await callServices(req, res, route, parsedUrl);
   }
-}
+};
 
 const requestHandler = async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -262,12 +292,12 @@ const requestHandler = async (req, res) => {
   req.headers.host = req.headers.host.replace('www.', '');
   // Check if in cache
   if (cachedRoute[req.headers.host + parsedUrl.pathname]) {
-    processRoute(req, res, cachedRoute[req.headers.host + parsedUrl.pathname], parsedUrl);
+    await processRoute(req, res, cachedRoute[req.headers.host + parsedUrl.pathname], parsedUrl);
   } else {
     const collection = db.get().collection('routes');
     const route = await collection.findOne({ path: parsedUrl.pathname, host: req.headers.host, method: req.method.toLowerCase() });
     if (route) {
-      processRoute(req, res, route, parsedUrl);
+      await processRoute(req, res, route, parsedUrl);
     } else {
       res.statusCode = 500;
       res.end('Service not exists');
@@ -277,7 +307,7 @@ const requestHandler = async (req, res) => {
 
 const server = http.createServer(requestHandler);
 // Connect to Mongo on start
-db.connect(process.env.DATABASE_URL, function (err) {
+db.connect(config.DATABASE_URL, function (err) {
   if (err) {
     process.stderr.write('Unable to connect to Mongo.\r\n');
     process.exit(1);
@@ -292,13 +322,13 @@ db.connect(process.env.DATABASE_URL, function (err) {
       }
     });
 
-    server.listen(process.env.PORT || 3000, (err) => {
+    server.listen(config.PORT || 3000, (err) => {
       if (err) {
         process.stderr.write(`${err.toString()}\r\n`);
         process.exit(1);
       }
-      process.stdout.write(`Started on ${process.env.PORT | 3000}\r\n`);
-    })
+      process.stdout.write(`Started on ${config.PORT | 3000}\r\n`);
+    });
 
   }
 });

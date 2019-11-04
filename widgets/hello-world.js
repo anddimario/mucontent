@@ -1,6 +1,6 @@
 'use strict';
 
-exports.handler = (req, res, callback) => {
+exports.handler = (req, res) => {
   process.stdout.write('Widgets hello world\r\n');
-  callback(null, {helloWorldWidget: 'basic hello world'});
+  return {helloWorldWidget: 'basic hello world'};
 };

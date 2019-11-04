@@ -1,5 +1,5 @@
 'use strict';
-exports.handler = (req, res, callback) => {
+exports.handler = (req, res) => {
   process.stdout.write('Middleware hello world\r\n');
-  callback(null, 'done');
+  return 'done';
 };

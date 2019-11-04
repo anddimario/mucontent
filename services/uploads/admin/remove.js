@@ -1,5 +1,6 @@
 'use strict';
 const db = require('../../../db');
+const config = require('../../../config');
 const ObjectId = require('mongodb').ObjectID;
 const fs = require('fs');
 const promisify = require('util').promisify;
@@ -12,7 +13,7 @@ module.exports = async (req, res, callback) => {
     const o_id = new ObjectId(req.params.id);
     const file = await collection.findOne({ _id: o_id });
     // remove file
-    await removeFile(`${process.env.UPLOAD_DIR}/${file.filename}`);
+    await removeFile(`${config.UPLOAD_DIR}/${file.filename}`);
     await collection.remove({ _id: o_id });
     callback(null, 'done');
   } catch (e) {

@@ -1,6 +1,6 @@
 'use strict';
 
-exports.handler = (req, res, callback) => {
+exports.handler = () => {
   process.stdout.write('Service hello world\r\n');
-  callback(null, {service: 'All is done'});
+  return {service: 'All is done'};
 };

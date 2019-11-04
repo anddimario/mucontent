@@ -102,7 +102,7 @@ async function uninstall() {
 }
 
 // Connect to Mongo on start
-db.connect(process.env.DATABASE, function (err) {
+db.connect(config.DATABASE, function (err) {
   if (err) {
     process.stdout.write('Unable to connect to Mongo.');
     process.exit(1);
