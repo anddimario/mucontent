@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "ajv": "^6.10.2",
-    "bcrypt": "^3.0.6",
+    "bcrypt": "^5.0.0",
     "formidable": "^1.2.1",
     "mongodb": "^3.3.3",
     "nunjucks": "^3.2.0"
